@@ -15,15 +15,11 @@ const float TANK_HEIGHT = 5;
 
 const float GRAVITY = -9.8;
 const float MASS = 0.1;
+const float H_KERNEL = 10.0;
 const float K_GAS_CONSTANT = 10.0;
-const float ENVIRONMENTAL_PRESSURE = 10.0;
+const float MU = 10.0;
+const float REST_DENSITY = 10.0;
 const float K_DRAG = 0.1;
-
-enum KernelType {
-  Poly6,
-  Spiky,
-  Viscosity
-};
 
 WaterSystem::WaterSystem()
 {
@@ -53,36 +49,37 @@ WaterSystem::WaterSystem()
 
 std::vector<Vector3f> WaterSystem::evalF(std::vector<Vector3f> state)
 {
-    std::vector<Vector3f> f;
-    // TODO: implement evalF
-    //  - gravity
-    //  - viscous drag
+  std::vector<Vector3f> f;
+  Vector3f fGravity = Vector3f(0.0, MASS * GRAVITY, 0.0);
+  std::vector<std::vector<int>> particleNeighbors;
+  std::vector<float> particleDensity;
 
-    for (int i=0; i< 1; ++i) {
-	Vector3f velocity = getVelocityAt(state, i);
-	
-	Vector3f fGravity(0.0, MASS * GRAVITY, 0.0);
-	Vector3f fDrag = -K_DRAG * velocity;
+  // first pass: calculate density of all particles
+  for (int i=0; i<(int) state.size()/2; ++i) {
+    std::vector<int> nearestParticles = neighborsOfParticle(i, state);
+    float density = calculateDensityOfParticle(i, state, nearestParticles);
+    
+    particleNeighbors.push_back(nearestParticles);
+    particleDensity.push_back(density);
+  }
+    
+  // second pass: calculate forces
+  for (int i=0; i<(int) state.size()/2; ++i) {
+    Vector3f velocity = getVelocityAt(state, i);
+    std::vector<int> nearestParticles = particleNeighbors.at(i);
 
-	Vector3f totalForce;
-	if (state[0].y() < 0)
-	    totalForce = -fGravity + fDrag;
-	else
-	    totalForce = fGravity + fDrag;
+    Vector3f fPressure = calculatePressureForceOnParticle(i, state, nearestParticles, particleDensity);
+    Vector3f fViscosity = calculateViscosityForceOnParticle(i, state, nearestParticles, particleDensity);
+    Vector3f fExternal = calculateExternalForceOnParticle();
 
-	Vector3f acceleration = totalForce / MASS;
-	
-	f.push_back(velocity);
-	f.push_back(acceleration);
-    }
+    Vector3f totalForce = fPressure + fViscosity + fGravity + fExternal;
+    Vector3f acceleration = totalForce / MASS;
 
-    for (int i=1; i<(int) state.size()/2; ++i) {
-      f.push_back(Vector3f());
-      f.push_back(Vector3f());
-    }
-    //cout << f.size() << endl;
+    f.push_back(velocity);
+    f.push_back(acceleration);
+  }
 
-    return f;
+  return f;
 }
 
 // render the system (ie draw the particles)
@@ -103,33 +100,94 @@ void WaterSystem::draw(GLProgram& gl)
     }
 }
 
-float WaterSystem::calculateKernel(float r) {
-  // poly6 kernel
-  float d = 10.0;
+std::vector<int> WaterSystem::neighborsOfParticle(int i, std::vector<Vector3f> state) {
+  std::vector<int> foo;
+  return foo;
+}
 
-  if (r < 0 || r > d) {
+
+float WaterSystem::calculateKernel(WaterSystem::KernelType type, float r) {
+  if (r < 0 || r > H_KERNEL) {
     return 0;
   }
 
-  return 315 / (64 * c_pi * pow(d, 9)) * pow((pow(d, 2) - pow(r, 2)), 3);
+  float numerator = 0;
+  float denominator = 1;
+
+  if (type == Poly6) {
+    numerator = 315 * pow( pow(H_KERNEL, 2) - pow(r, 2), 3);
+    denominator = 64 * c_pi * pow(H_KERNEL, 9);
+  } else if (type == Spiky) {
+    numerator = 15 * pow(H_KERNEL - r, 3);
+    denominator = c_pi * pow(H_KERNEL, 6);
+  } else if (type == Viscosity) {
+    float term1 = -pow(r, 3) / (2 * pow(H_KERNEL, 3));
+    float term2 = pow(r, 2) / pow(H_KERNEL, 2);
+    float term3 = H_KERNEL / (2 * r);
+
+    numerator = 15 * (term1 + term2 + term3 - 1);
+    denominator = 2 * c_pi * pow(H_KERNEL, 3);
+  }
+
+  return numerator / denominator;
 }
 
-float WaterSystem::calculateDensityOfParticle(float i, std::vector<Vector3f> state) {
+float WaterSystem::calculateDensityOfParticle(int i, std::vector<Vector3f> state, std::vector<int> nearestParticles) {
     float density = 0;
+    Vector3f x_i = getPositionAt(state, i);
 
-    Vector3f x_i = state.at(i);
+    for (int j = 0; j<(int) nearestParticles.size(); ++j) {
+      float index = nearestParticles.at(j);
+      Vector3f x_j = getPositionAt(state, index);
+      float r = (x_i - x_j).abs();
+      float W = calculateKernel(Poly6, r);
 
-    for (int j = 0; j<(int) state.size(); ++j) {
-    Vector3f x_j = state.at(j);
-    float r = (x_i - x_j).abs();
-    float W = calculateKernel(r);
-    density += MASS * W;
+      density += MASS * W;
   }
 
   return density;
 }
 
-float WaterSystem::calculatePressureOfParticle(float i, std::vector<Vector3f> state) {
-  float density = calculateDensityOfParticle(i, state);
-  return K_GAS_CONSTANT * (density - ENVIRONMENTAL_PRESSURE);
+Vector3f WaterSystem::calculatePressureForceOnParticle(int i, std::vector<Vector3f> state, std::vector<int> nearestParticles, std::vector<float> particleDensity) {
+  Vector3f force = Vector3f();
+  Vector3f x_i = getPositionAt(state, i);
+  float density_i = particleDensity.at(i);
+
+  for (int j=0; j<(int) nearestParticles.size(); ++j) {
+    Vector3f x_j = getPositionAt(state, nearestParticles.at(j));
+    float density_j = particleDensity.at(j);
+    Vector3f r_ij = x_i - x_j;
+    float q_ij = r_ij.abs() / H_KERNEL;
+
+    float numerator1 = density_i + density_j - 2 * REST_DENSITY;
+    float numerator2 = pow((1 - q_ij), 2);
+    force += MASS * numerator1 * numerator2 * r_ij / (density_j * q_ij);
+  }
+
+  force = force * 15 * K_GAS_CONSTANT / (c_pi * pow(H_KERNEL, 4));
+  return force;
+}
+
+Vector3f WaterSystem::calculateViscosityForceOnParticle(int i, std::vector<Vector3f> state, std::vector<int> nearestParticles, std::vector<float> particleDensity) {
+  Vector3f force = Vector3f();
+  Vector3f x_i = getPositionAt(state, i);
+  Vector3f v_i = getVelocityAt(state, i);
+
+  for (int j=0; j<(int) nearestParticles.size(); ++j) {
+    float index = nearestParticles.at(j);
+    Vector3f x_j = getPositionAt(state, index);
+    Vector3f v_j = getVelocityAt(state, index);
+    float density_j = particleDensity.at(index);
+    Vector3f r_ij = x_i - x_j;
+    float q_ij = r_ij.abs() / H_KERNEL;
+
+    force += MASS * (v_i - v_j) * (1 - q_ij) / density_j;
+  }
+
+  force = force * 40 * MU / (c_pi * pow(H_KERNEL, 4));
+  return force;
+}
+
+Vector3f WaterSystem::calculateExternalForceOnParticle() {
+  return Vector3f();
 }
