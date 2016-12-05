@@ -22,9 +22,13 @@ public:
     // inherits 
     // std::vector<Vector3f> m_vVecState;
 private:
-    std::vector<Vector3f> systemGrid};
+    //list of state indices
+    std::vector<vector<int>> systemGrid;
 
-	float calculateKernel(KernelType type, float r);
+
+    void setGrid(const std::vector<vector<int>>  & newGrid) { systemGrid = newGrid; };
+    int posToGridIndex(float x, float y, float z);
+    float calculateKernel(KernelType type, float r);
 	float calculateDensityOfParticle(int i, std::vector<Vector3f> state, std::vector<int> nearestParticles);
 	Vector3f calculatePressureForceOnParticle(int i, std::vector<Vector3f> state, std::vector<int> nearestParticles, std::vector<float> particleDensity);
 	Vector3f calculateViscosityForceOnParticle(int i, std::vector<Vector3f> state, std::vector<int> nearestParticles, std::vector<float> particleDensity);
