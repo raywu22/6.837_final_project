@@ -251,6 +251,7 @@ void initRendering()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 }
 }
 
@@ -276,7 +277,7 @@ int main(int argc, char** argv)
     printf("Using Integrator %c with time step %.4f\n", integrator, h);
 
 
-    GLFWwindow* window = createOpenGLWindow(1024, 1024, "Assignment 3");
+    GLFWwindow* window = createOpenGLWindow(1024, 1024, "Final Project");
 
     // setup the event handlers
     glfwSetKeyCallback(window, keyCallback);
