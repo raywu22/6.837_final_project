@@ -42,10 +42,10 @@ EQUALS = =
 CMAKE_EDIT_COMMAND = /usr/bin/ccmake
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject
+CMAKE_SOURCE_DIR = /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject/build
+CMAKE_BINARY_DIR = /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -72,14 +72,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject/build && $(CMAKE_COMMAND) -E cmake_progress_start /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject/build/CMakeFiles /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject/build/3rd_party/glfw/CMakeFiles/progress.marks
-	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject/build && $(MAKE) -f CMakeFiles/Makefile2 3rd_party/glfw/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject/build/CMakeFiles 0
+	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/build && $(CMAKE_COMMAND) -E cmake_progress_start /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/build/CMakeFiles /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/build/3rd_party/glfw/CMakeFiles/progress.marks
+	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/build && $(MAKE) -f CMakeFiles/Makefile2 3rd_party/glfw/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject/build && $(MAKE) -f CMakeFiles/Makefile2 3rd_party/glfw/clean
+	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/build && $(MAKE) -f CMakeFiles/Makefile2 3rd_party/glfw/clean
 .PHONY : clean
 
 # The main clean target
@@ -88,17 +88,17 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject/build && $(MAKE) -f CMakeFiles/Makefile2 3rd_party/glfw/preinstall
+	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/build && $(MAKE) -f CMakeFiles/Makefile2 3rd_party/glfw/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject/build && $(MAKE) -f CMakeFiles/Makefile2 3rd_party/glfw/preinstall
+	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/build && $(MAKE) -f CMakeFiles/Makefile2 3rd_party/glfw/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Help Target
@@ -120,6 +120,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

@@ -9,34 +9,46 @@ using namespace std;
 
 const float c_pi = 3.14159265358979323846f;
 
-const float TANK_START_X = -5.0f;
-const float TANK_END_X = 5.0f;
-const float TANK_START_Y = -5.0f;
-const float TANK_END_Y = 5.0f;
-const float TANK_START_Z = -5.0f;
-const float TANK_END_Z = 0.0f;
+const float TANK_START_X = -3.0f;
+const float TANK_END_X = 3.0f;
+const float TANK_START_Y = -3.0f;
+const float TANK_END_Y = 0.0f;
+const float TANK_START_Z = -3.0f;
+const float TANK_END_Z = 3.0f;
 
-const float GRID_START_X = -5.0f;
-const float GRID_END_X = 5.0f;
-const float GRID_START_Y = -5.0f;
-const float GRID_END_Y = 5.0f;
-const float GRID_START_Z = -5.0f;
+const float GRID_START_X = -3.0f;
+const float GRID_END_X = 3.0f;
+const float GRID_START_Y = -3.0f;
+const float GRID_END_Y = 3.0f;
+const float GRID_START_Z = -3.0f;
 const float GRID_END_Z = 3.0f;
 
-const float PARTICLE_SPACING = 0.05;
-const float CELL_SPACING = 0.2;
+const float PARTICLE_SPACING = 0.5f;
+const float CELL_SPACING = 1.0f;
 const float NUM_X_INDICES = (GRID_END_X - GRID_START_X) / CELL_SPACING;
 const float NUM_Y_INDICES = (GRID_END_Y - GRID_START_Y) / CELL_SPACING;
 const float NUM_Z_INDICES = (GRID_END_Z - GRID_START_Z) / CELL_SPACING;
 const float NUM_TOTAL_INDICES = NUM_X_INDICES * NUM_Y_INDICES * NUM_Z_INDICES;
 
-const float GRAVITY = -9.8;
+const float GRAVITY = 0.1;
 const float MASS = 0.1;
-const float H_KERNEL = 10.0;
-const float K_GAS_CONSTANT = 10.0;
-const float MU = 10.0;
-const float REST_DENSITY = 10.0;
-const float K_DRAG = 0.1;
+const float H_KERNEL = 1.0;
+const float K_GAS_CONSTANT = 1.0;
+const float MU = 1.0;
+const float REST_DENSITY = 1.0;
+
+void WaterSystem::printGrid() {
+  for (int i=0; i<(int) systemGrid.size(); ++i) {
+    vector<int> cellElements = systemGrid.at(i);
+    cout << "cell " << i << ": ";
+
+    for (int j=0; j<(int) cellElements.size(); ++j) {
+      cout << cellElements.at(j) << " ";
+    }
+
+    cout << endl;
+  }
+}
 
 int WaterSystem::posToGridIndex(float x, float y, float z) {
     float xIndex = (x - GRID_START_X) / CELL_SPACING;
@@ -47,7 +59,7 @@ int WaterSystem::posToGridIndex(float x, float y, float z) {
 
 void WaterSystem::clearGrid() {
   for (int i = 0; i <(int) systemGrid.size(); i++)
-    systemGrid = vector<vector<int>>();
+    systemGrid[i] = vector<int>();
 }
 
 WaterSystem::WaterSystem()
@@ -81,49 +93,68 @@ void WaterSystem::updateGrid(std::vector<Vector3f> state){
     clearGrid();
     for (int stateIndex = 0; stateIndex <(int) state.size(); stateIndex += 2) {
       Vector3f pos = state[stateIndex];
-      systemGrid[WaterSystem::posToGridIndex(pos.x(), pos.y(), pos.z())].push_back(stateIndex/2);
+      int gridIndex = WaterSystem::posToGridIndex(pos.x(), pos.y(), pos.z());
+      if (gridIndex < 0 || gridIndex >= NUM_TOTAL_INDICES)
+	cout << "not in grid" << endl;
+      else
+	systemGrid[gridIndex].push_back(stateIndex/2);
     }
 }
 
 std::vector<int> WaterSystem::getNeighbors(int i, std::vector<Vector3f> state) {
     Vector3f iPos = state[2 * i];
     std::vector<int> neighboringIndices = vector<int>();
-    for (int x = iPos.x() - CELL_SPACING; x < iPos.x() + CELL_SPACING * 2; x += CELL_SPACING)
-    for (int y = iPos.y() - CELL_SPACING; y < iPos.y() + CELL_SPACING * 2; y += CELL_SPACING)
-    for (int z = iPos.z() - CELL_SPACING; z < iPos.z() + CELL_SPACING * 2; z += CELL_SPACING) {
+    
+    for (float x = iPos.x() - CELL_SPACING; x < iPos.x() + CELL_SPACING*2; x += CELL_SPACING)
+    for (float y = iPos.y() - CELL_SPACING; y < iPos.y() + CELL_SPACING*2; y += CELL_SPACING)
+    for (float z = iPos.z() - CELL_SPACING; z < iPos.z() + CELL_SPACING*2; z += CELL_SPACING) {
         int gridIndex = posToGridIndex(x, y, z);
+	cout << x << " " << y << " " << z << endl;
         if (gridIndex >= 0 && gridIndex < NUM_TOTAL_INDICES)
             neighboringIndices.insert(neighboringIndices.end(), systemGrid[gridIndex].begin(), systemGrid[gridIndex].end());
-    }
+	    }
+    
     return neighboringIndices;
 }
 
 std::vector<Vector3f> WaterSystem::evalF(std::vector<Vector3f> state)
 {
+  /*  
+  vector<Vector3f> f;
+  for (int i=0; i<(int) state.size()/2; ++i) {
+    f.push_back(Vector3f());
+    f.push_back(Vector3f());
+  }
+  return f;*/
+  //WaterSystem::updateGrid(state);
   std::vector<Vector3f> f;
   Vector3f fGravity = Vector3f(0.0, MASS * GRAVITY, 0.0);
   std::vector<std::vector<int>> particleNeighbors;
   std::vector<float> particleDensity;
-
+  /*
   // first pass: calculate density of all particles
   for (int i=0; i<(int) state.size()/2; ++i) {
+    cout << "particle " << i << ": " << endl;
     std::vector<int> nearestParticles = WaterSystem::getNeighbors(i, state);
     float density = calculateDensityOfParticle(i, state, nearestParticles);
     
     particleNeighbors.push_back(nearestParticles);
     particleDensity.push_back(density);
   }
-    
+  cout << "done first pass" << endl;
+  */
   // second pass: calculate forces
   for (int i=0; i<(int) state.size()/2; ++i) {
     Vector3f velocity = getVelocityAt(state, i);
+    /*
     std::vector<int> nearestParticles = particleNeighbors.at(i);
     Vector3f fPressure = calculatePressureForceOnParticle(i, state, nearestParticles, particleDensity);
     Vector3f fViscosity = calculateViscosityForceOnParticle(i, state, nearestParticles, particleDensity);
     Vector3f fExternal = calculateExternalForceOnParticle();
 
     Vector3f totalForce = fPressure + fViscosity + fGravity + fExternal;
-    Vector3f acceleration = totalForce / MASS;
+    Vector3f acceleration = totalForce / MASS;*/
+    Vector3f acceleration = fGravity / MASS;
 
     f.push_back(velocity);
     f.push_back(acceleration);
@@ -148,6 +179,7 @@ void WaterSystem::draw(GLProgram& gl)
       gl.updateModelMatrix(Matrix4f::translation(getPositionAt(currentState, i)));
       drawSphere(0.075f, 10, 10);
     }
+    cout << "drawing done" << endl;
 }
 
 float WaterSystem::calculateKernel(WaterSystem::KernelType type, float r) {

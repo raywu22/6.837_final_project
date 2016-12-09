@@ -217,8 +217,10 @@ void stepSystem()
         //timeStepper->takeStep(simpleSystem, h);
         //timeStepper->takeStep(pendulumSystem, h);
         //timeStepper->takeStep(clothSystem, h);
+      cout << "start step" << endl;
         timeStepper->takeStep(waterSystem, h);
         simulated_s += h;
+	cout << "done step" << endl;
     }
 }
 

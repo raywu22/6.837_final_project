@@ -1,4 +1,4 @@
-# Install script for directory: /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/FinalProject/3rd_party/glfw/src
+# Install script for directory: /afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/3rd_party/glfw/src
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
