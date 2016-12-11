@@ -1,3 +1,0 @@
-/afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/CMakeFiles/a3.dir
-/afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/3rd_party/glfw/src/CMakeFiles/glfw.dir
-/afs/athena.mit.edu/user/x/t/xtnbui/Desktop/6.837/6.837_final_project/vecmath/CMakeFiles/vecmath.dir
