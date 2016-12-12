@@ -28,7 +28,7 @@ private:
 
 	void setGrid(const std::vector<std::vector<int>>  & newGrid) { systemGrid = newGrid; };
 	void printGrid();
-	int posToGridIndex(float x, float y, float z);
+	int posToGridIndex(float x, float y);
 	void clearGrid();
 	void updateGrid(std::vector<Vector3f> state);
 	std::vector<int> getNeighbors(int i, std::vector<Vector3f> state);
