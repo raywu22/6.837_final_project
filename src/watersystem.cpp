@@ -31,14 +31,14 @@ const float NUM_TOTAL_INDICES = NUM_X_INDICES * NUM_Y_INDICES;
 const float NEIGHBOR_RADIUS = CELL_SPACING;
 
 const float GRAVITY = -10.0;
-const float MASS = 1.0;
-const float H_KERNEL = NEIGHBOR_RADIUS;
+const float MASS = 100.0;
+const float H_KERNEL = 1.0;
 const float K_GAS_CONSTANT = 0.1;
 
-const float EPSILON = 0.03;
-const float MU = 1.0;
-const float REST_DENSITY = 10.0;
-const float SINGLE_PARTICLE_DENSITY = 1.0;
+const float EPSILON = 0.01;
+const float MU = 0.000001;
+const float REST_DENSITY = 1000.0/16;
+const float SINGLE_PARTICLE_DENSITY = 50.0;
 
 void WaterSystem::printGrid() {
   for (int i=0; i<(int) systemGrid.size(); ++i) {
@@ -167,18 +167,15 @@ std::vector<Vector3f> WaterSystem::evalF(std::vector<Vector3f> state)
 	fPressure.print();
 	cout << "Viscosity ";
 	fViscosity.print();
-     //   cout << fPressure.abs() << " " << fViscosity.abs() << " " << fExternal.abs() << endl;
 
         Vector3f totalForce = fPressure + fViscosity + fGravity + fExternal;
-        Vector3f acceleration = totalForce / MASS / 100;
-      //  cout << velocity.x() << " " << velocity.y() << " " << velocity.z() << endl; 
-      //  cout << acceleration.x() << " " << acceleration.y() << " " << acceleration.z() << endl; 
+	Vector3f acceleration = totalForce / MASS;
         if (pos.x() <= TANK_START_X + EPSILON || pos.x() >= TANK_END_X - EPSILON)
 	  velocity = Vector3f(-1.0f*velocity.x(), velocity.y(), 0.0f);
         if (pos.y() <= TANK_START_Y + EPSILON) {
-            acceleration = Vector3f(acceleration.x(), 0.0f, 0.0f);
-	    velocity = Vector3f(velocity.x(), 0.0f, 0.0f);
+	    velocity = Vector3f(velocity.x(), -velocity.y(), 0.0f);
 	}
+
         f.push_back(velocity);
         f.push_back(acceleration);
     }
@@ -248,7 +245,7 @@ float WaterSystem::calculateDensityOfParticle(int i, std::vector<Vector3f> state
 
       density += MASS * W;
   }
-    cout << density << " " << endl;
+    cout << density << " ";
 
   return density;
 }
@@ -265,11 +262,12 @@ Vector3f WaterSystem::calculatePressureForceOnParticle(int i, std::vector<Vector
     float q_ij = r_ij.abs() / H_KERNEL;
 
     float numerator1 = density_i + density_j - 2 * REST_DENSITY;
+    cout << numerator1 << endl;
     float numerator2 = pow((1 - q_ij), 2);
     force += MASS * numerator1 * numerator2 * r_ij / (density_j * q_ij);
   }
 
-  force = force * 15 * K_GAS_CONSTANT / (c_pi * pow(H_KERNEL, 4));
+  force = -force * 15 * K_GAS_CONSTANT / (c_pi * pow(H_KERNEL, 4));
   return force;
 }
 
