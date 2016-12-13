@@ -36,6 +36,7 @@ const float H_KERNEL = 1.0;
 const float K_GAS_CONSTANT = 1.0;
 const float MU = 1.0;
 const float REST_DENSITY = 1.0;
+const float EPSILON = 0.03;
 
 void WaterSystem::printGrid() {
   for (int i=0; i<(int) systemGrid.size(); ++i) {
@@ -123,11 +124,13 @@ std::vector<int> WaterSystem::getNeighbors(int i, std::vector<Vector3f> state) {
 //    float xAccel = acceleration.x();
 //    float yAccel = acceleration.y();
 //    float epsilon = 0.03;
-//    if (pos.x() <= TANK_START_X + epsilon) {
-//        
-//    }
 //    vector<Vector3f> velAndAccel;
-//    if 
+//    if (pos.x() <= TANK_START_X + epsilon || pos.x() >= TANK_END_X - epsilon)
+//        xVel *= -1;
+//    if (pos.y() <= TANK_START_Y + epsilon)
+//        xAccel = 0.05;
+//    velAndAccel;
+//    
 //}
 
 std::vector<Vector3f> WaterSystem::evalF(std::vector<Vector3f> state)
@@ -149,6 +152,7 @@ std::vector<Vector3f> WaterSystem::evalF(std::vector<Vector3f> state)
     }
     // second pass: calculate forces
     for (int i=0; i<(int) state.size()/2; ++i) {
+        Vector3f pos = state[2*i];
         Vector3f velocity = state[2*i+1];
         std::vector<int> nearestParticles = particleNeighbors.at(i);
         Vector3f fPressure = calculatePressureForceOnParticle(i, state, nearestParticles, particleDensity);
@@ -161,6 +165,10 @@ std::vector<Vector3f> WaterSystem::evalF(std::vector<Vector3f> state)
         Vector3f acceleration = totalForce / MASS / 100;
       //  cout << velocity.x() << " " << velocity.y() << " " << velocity.z() << endl; 
       //  cout << acceleration.x() << " " << acceleration.y() << " " << acceleration.z() << endl; 
+        if (pos.x() <= TANK_START_X + EPSILON || pos.x() >= TANK_END_X - EPSILON)
+            velocity = Vector3f(-1*velocity.x(), velocity.y(), 0.0f);
+        if (pos.y() <= TANK_START_Y + EPSILON)
+            acceleration = Vector3f(acceleration.x(), 0.05f, 0.0f);
         f.push_back(velocity);
         f.push_back(acceleration);
     }
