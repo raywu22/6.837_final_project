@@ -213,13 +213,13 @@ void resetTime() {
 void stepSystem()
 {
     // step until simulated_s has caught up with elapsed_s.
-    while (simulated_s < elapsed_s) {
+    //while (simulated_s < elapsed_s) {
         //timeStepper->takeStep(simpleSystem, h);
         //timeStepper->takeStep(pendulumSystem, h);
         //timeStepper->takeStep(clothSystem, h);
         timeStepper->takeStep(waterSystem, h);
         simulated_s += h;
-    }
+	//}
 }
 
 // Draw the current particle positions

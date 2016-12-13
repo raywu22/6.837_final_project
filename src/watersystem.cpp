@@ -11,7 +11,7 @@ const float c_pi = 3.14159265358979323846f;
 
 const float TANK_STANDARD_MINUS = -1.0f;
 const float TANK_STANDARD_PLUS = 1.0f;
-const float PARTICLE_SPACING = 0.25f;
+const float PARTICLE_SPACING = 0.16f;
 const float CELL_SPACING = 0.25f;
 
 const float TANK_START_X = TANK_STANDARD_MINUS;
@@ -30,13 +30,15 @@ const float NUM_TOTAL_INDICES = NUM_X_INDICES * NUM_Y_INDICES;
 
 const float NEIGHBOR_RADIUS = CELL_SPACING;
 
-const float GRAVITY = 0.001;
-const float MASS = 0.1;
-const float H_KERNEL = 1.0;
-const float K_GAS_CONSTANT = 1.0;
-const float MU = 1.0;
-const float REST_DENSITY = 1.0;
+const float GRAVITY = -10.0;
+const float MASS = 1.0;
+const float H_KERNEL = NEIGHBOR_RADIUS;
+const float K_GAS_CONSTANT = 0.1;
+
 const float EPSILON = 0.03;
+const float MU = 1.0;
+const float REST_DENSITY = 10.0;
+const float SINGLE_PARTICLE_DENSITY = 1.0;
 
 void WaterSystem::printGrid() {
   for (int i=0; i<(int) systemGrid.size(); ++i) {
@@ -158,7 +160,13 @@ std::vector<Vector3f> WaterSystem::evalF(std::vector<Vector3f> state)
         Vector3f fPressure = calculatePressureForceOnParticle(i, state, nearestParticles, particleDensity);
         Vector3f fViscosity = calculateViscosityForceOnParticle(i, state, nearestParticles, particleDensity);
         Vector3f fExternal = calculateExternalForceOnParticle();
-   
+	
+	cout << "Gravity ";
+	fGravity.print();
+	cout << "Pressure ";
+	fPressure.print();
+	cout << "Viscosity ";
+	fViscosity.print();
      //   cout << fPressure.abs() << " " << fViscosity.abs() << " " << fExternal.abs() << endl;
 
         Vector3f totalForce = fPressure + fViscosity + fGravity + fExternal;
@@ -166,9 +174,11 @@ std::vector<Vector3f> WaterSystem::evalF(std::vector<Vector3f> state)
       //  cout << velocity.x() << " " << velocity.y() << " " << velocity.z() << endl; 
       //  cout << acceleration.x() << " " << acceleration.y() << " " << acceleration.z() << endl; 
         if (pos.x() <= TANK_START_X + EPSILON || pos.x() >= TANK_END_X - EPSILON)
-            velocity = Vector3f(-1*velocity.x(), velocity.y(), 0.0f);
-        if (pos.y() <= TANK_START_Y + EPSILON)
-            acceleration = Vector3f(acceleration.x(), 0.05f, 0.0f);
+	  velocity = Vector3f(-1.0f*velocity.x(), velocity.y(), 0.0f);
+        if (pos.y() <= TANK_START_Y + EPSILON) {
+            acceleration = Vector3f(acceleration.x(), 0.0f, 0.0f);
+	    velocity = Vector3f(velocity.x(), 0.0f, 0.0f);
+	}
         f.push_back(velocity);
         f.push_back(acceleration);
     }
@@ -227,7 +237,7 @@ float WaterSystem::calculateKernel(WaterSystem::KernelType type, float r) {
 }
 
 float WaterSystem::calculateDensityOfParticle(int i, std::vector<Vector3f> state, std::vector<int> nearestParticles) {
-    float density = 0;
+    float density = SINGLE_PARTICLE_DENSITY;
     Vector3f x_i = getPositionAt(state, i);
 
     for (int j = 0; j<(int) nearestParticles.size(); ++j) {
@@ -238,6 +248,7 @@ float WaterSystem::calculateDensityOfParticle(int i, std::vector<Vector3f> state
 
       density += MASS * W;
   }
+    cout << density << " " << endl;
 
   return density;
 }
