@@ -11,8 +11,8 @@ const float c_pi = 3.14159265358979323846f;
 
 const float TANK_STANDARD_MINUS = -1.0f;
 const float TANK_STANDARD_PLUS = 1.0f;
-const float PARTICLE_SPACING = 0.16f;
-const float CELL_SPACING = 0.25f;
+const float PARTICLE_SPACING = 0.08f;
+const float CELL_SPACING = 0.08f;
 
 const float TANK_START_X = TANK_STANDARD_MINUS;
 const float TANK_END_X = TANK_STANDARD_PLUS;
@@ -30,15 +30,15 @@ const float NUM_TOTAL_INDICES = NUM_X_INDICES * NUM_Y_INDICES;
 
 const float NEIGHBOR_RADIUS = CELL_SPACING;
 
-const float GRAVITY = -10.0;
-const float MASS = 100.0;
-const float H_KERNEL = 1.0;
-const float K_GAS_CONSTANT = 0.1;
+const float GRAVITY = -50.0f;
+const float MASS = 1.0f;
+const float H_KERNEL = 1.0f;
+const float K_GAS_CONSTANT = 0.01f;
 
-const float EPSILON = 0.01;
-const float MU = 0.000001;
-const float REST_DENSITY = 1000.0/16;
-const float SINGLE_PARTICLE_DENSITY = 50.0;
+const float EPSILON = 0.01f;
+const float MU = 0.0000001f;
+const float REST_DENSITY = 0.001f;
+const float SINGLE_PARTICLE_DENSITY = 0.1f;
 
 void WaterSystem::printGrid() {
   for (int i=0; i<(int) systemGrid.size(); ++i) {
@@ -76,11 +76,11 @@ WaterSystem::WaterSystem()
     
     int curStateIndex = 0;
     // particles that make up the water into which particle falls
-    for (float x = TANK_START_X; x < TANK_END_X; x += PARTICLE_SPACING)
+    for (float x = TANK_START_X; x < 0.0f; x += PARTICLE_SPACING)
     for (float y = TANK_START_Y; y < TANK_END_Y; y += PARTICLE_SPACING) {
        //populate the initial grid with current index
         int gridIndex = WaterSystem::posToGridIndex(x, y);
-        Vector3f position = Vector3f(x, y, 0.0f);
+        Vector3f position = Vector3f(x, y + 1.0f, 0.0f);
         initialState.push_back(position);
         initialState.push_back(Vector3f(0.0f, 0.0f, 0.0f));
         initialGrid[gridIndex].push_back(curStateIndex);
@@ -161,22 +161,21 @@ std::vector<Vector3f> WaterSystem::evalF(std::vector<Vector3f> state)
         Vector3f fViscosity = calculateViscosityForceOnParticle(i, state, nearestParticles, particleDensity);
         Vector3f fExternal = calculateExternalForceOnParticle();
 	
-	cout << "Gravity ";
-	fGravity.print();
-	cout << "Pressure ";
-	fPressure.print();
-	cout << "Viscosity ";
-	fViscosity.print();
+//	cout << "Gravity ";
+//	fGravity.print();
+//	cout << "Pressure ";
+//	fPressure.print();
+//	cout << "Viscosity ";
+//	fViscosity.print();
+     //   cout << fPressure.abs() << " " << fViscosity.abs() << " " << fExternal.abs() << endl;
 
-        Vector3f totalForce = fPressure + fViscosity + fGravity + fExternal;
-	Vector3f acceleration = totalForce / MASS;
-        if (pos.x() <= TANK_START_X + EPSILON || pos.x() >= TANK_END_X - EPSILON)
-	  velocity = Vector3f(-1.0f*velocity.x(), velocity.y(), 0.0f);
-        if (pos.y() <= TANK_START_Y + EPSILON) {
-	    velocity = Vector3f(velocity.x(), -velocity.y(), 0.0f);
-	}
-
+        Vector3f totalForce = 1000*fPressure + fViscosity + fGravity + fExternal;
+        Vector3f acceleration = totalForce / MASS / 10;
+      //  cout << velocity.x() << " " << velocity.y() << " " << velocity.z() << endl; 
+      //  cout << acceleration.x() << " " << acceleration.y() << " " << acceleration.z() << endl; 
+    
         f.push_back(velocity);
+        //acceleration += -1.0f * velocity;
         f.push_back(acceleration);
     }
     return f;
@@ -192,7 +191,7 @@ std::vector<Vector3f> WaterSystem::evalF(std::vector<Vector3f> state)
 // render the system (ie draw the particles)
 void WaterSystem::draw(GLProgram& gl)
 {
-    const Vector3f PENDULUM_COLOR(0.73f, 0.0f, 0.83f);
+    const Vector3f PENDULUM_COLOR(0.5f, 0.8f, 1.0f);
     gl.updateMaterial(PENDULUM_COLOR);
 
     // TODO 4.2, 4.3
@@ -203,7 +202,7 @@ void WaterSystem::draw(GLProgram& gl)
    
     for (int i=0; i<(int) currentState.size()/2; ++i) {
       gl.updateModelMatrix(Matrix4f::translation(getPositionAt(currentState, i)));
-      drawSphere(0.075f, 10, 10);
+      drawSphere(0.05f, 10, 10);
     }
 }
 
@@ -245,7 +244,7 @@ float WaterSystem::calculateDensityOfParticle(int i, std::vector<Vector3f> state
 
       density += MASS * W;
   }
-    cout << density << " ";
+    //cout << density << " " << endl;
 
   return density;
 }
@@ -262,12 +261,11 @@ Vector3f WaterSystem::calculatePressureForceOnParticle(int i, std::vector<Vector
     float q_ij = r_ij.abs() / H_KERNEL;
 
     float numerator1 = density_i + density_j - 2 * REST_DENSITY;
-    cout << numerator1 << endl;
     float numerator2 = pow((1 - q_ij), 2);
     force += MASS * numerator1 * numerator2 * r_ij / (density_j * q_ij);
   }
 
-  force = -force * 15 * K_GAS_CONSTANT / (c_pi * pow(H_KERNEL, 4));
+  force = force * K_GAS_CONSTANT / (c_pi * pow(H_KERNEL, 4));
   return force;
 }
 

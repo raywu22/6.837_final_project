@@ -217,8 +217,29 @@ void stepSystem()
         //timeStepper->takeStep(simpleSystem, h);
         //timeStepper->takeStep(pendulumSystem, h);
         //timeStepper->takeStep(clothSystem, h);
-        timeStepper->takeStep(waterSystem, h);
-        simulated_s += h;
+    vector<Vector3f> state = waterSystem->getState();
+    vector<Vector3f> newState;
+    const float TANK_START_X = -1.0f;
+    const float  TANK_END_X = 1.0f;
+    const float TANK_START_Y = -1.0f;
+    const float TANK_END_Y = 1.0f;
+    for (int i = 0; i < state.size() / 2; i++) {
+        int randNum = rand() % 100 - 50;
+        Vector3f pos = state[2*i];
+        Vector3f velocity = state[2*i+1];
+        if (pos.x() <= TANK_START_X)
+            velocity = Vector3f(abs(velocity.x()), velocity.y(), 0.0f);
+        if (pos.x() >= TANK_END_X)
+            velocity = Vector3f(-0.3f*abs(velocity.x()), velocity.y(), 0.0f);
+        if (pos.y() <= TANK_START_Y) {
+            velocity = Vector3f(velocity.x() + 1.0f*randNum/200.0f, 0.4 * abs(velocity.y()) + 1.0f*(50.0f-abs(randNum))/100.0f, 0.0f);
+        }
+        newState.push_back(pos);
+        newState.push_back(velocity);
+    }
+    waterSystem->setState(newState);
+    timeStepper->takeStep(waterSystem, h);
+    simulated_s += h;
 	//}
 }
 
